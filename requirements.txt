@@ -19,6 +19,7 @@ itsdangerous==0.24
 Jinja2==2.10
 jmespath==0.9.3
 MarkupSafe==1.0
+Morfessor==2.0.4
 msgpack-numpy==0.4.1
 msgpack-python==0.5.2
 murmurhash==0.28.0
@@ -29,6 +30,8 @@ pathlib==1.0.1
 plac==0.9.6
 polyglot==16.7.4
 preshed==1.0.0
+pycld2==0.31
+PyICU==2.0.3
 python-dateutil==2.6.1
 pytz==2017.3
 regex==2017.4.5

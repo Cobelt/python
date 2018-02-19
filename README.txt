@@ -20,3 +20,4 @@ With the virtual environment activated :
 	1 - To collect tweets : 
 		python collect.py
 
+# Erreur
