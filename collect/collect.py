@@ -2,6 +2,11 @@ import tweepy
 import stream_listener
 import random
 
+# variables
+languages = ["en"]
+locations_number = 15
+trends_number = 5
+
 # auth variables of the twitter app
 consumer_key = 'syw9UpyitiyKL87kG0prc73gL'
 consumer_secret = 'aQ8FTv1mujffEnltgFHCr0PRbXG3UG7hBngkYAYI33722qHwxE'
@@ -15,17 +20,22 @@ auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
 
-top_trends = api.trends_available()
-random_trends_name = []
+trends_locations = api.trends_available()
+trends_name = []
 
-# appending 5 random trends among the top 50
-for i in range(0,5):
+# appending random top trends
+for i in range(0, locations_number):
     rand = random.randint(0, 49)
-    random_trends_name.append(top_trends[rand]['name'])
+    woeid = trends_locations[rand]['woeid']
+    data = api.trends_place(woeid)
+    trends = data[0]['trends'][:trends_number]
+    for trend in trends:
+        trends_name.append(trend['name'])
+
 
 # creation of the tweepy stream
 stream_listener = stream_listener.Twitter_stream_listener()
 stream = tweepy.Stream(auth, stream_listener)
 
-stream.filter(track=random_trends_name, async=True)
+stream.filter(languages=languages, track=trends_name, async=True)
 
