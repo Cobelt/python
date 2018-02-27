@@ -1,44 +1,49 @@
 import json
 import polyglot
 from polyglot.text import Text, Word
+from polyglot.detect import Detector
 
 
 class Tweet_process:
-    text = None
+    tab_tweet_text = []
+    tab_tweet_words = [[]]
+
+
 
     #à mettre des condition avec isinstance pour gerer cas chaine de tweet ou json etc
-    def __init__(self, tweet_string):
-        tweet_json = json.loads(tweet_string)
-        self.text = Text(tweet_json["text"])
+    # def __init__(self):
+    #     tab_tweet_text = []
+    #     tab_tweet_word = [[]]
+
+    # def tokenize_text(self):
+    #     return self.text.words
 
 
-    def tokenize_text(self):
-        return self.text.words
 
-'''
-    def tokenize_text(self, json_tweet):
-        if isinstance(json_tweet, json):
-            print ("Erreur : ce n'est pas un json")
-        else:
-            tweet_text = Text(json_tweet.text)
-            self.token_text = tweet_text
-'''
+    def fill_tab_tweet_from_file(self, file_name):
+        tab_words = [] #no more need length of list for loop
+        with open (file_name) as file:
+            for line in file:
+                tweet_json = json.loads(line)
+                tweet_text = Text(tweet_json['text'])
+                self.tab_tweet_text.append(tweet_text)
+                print (Detector(tweet_json['text']).language)
+                # try:
+                for x in tweet_text.words:
+                    tab_words.append(str(x))
+                self.tab_tweet_words.append(tab_words)
+# main
 
-def fill_tab_tweet_from_file(tab, file_name):
-    with open (file_name) as file:
-        for line in file:
-            tab.append(Tweet_process(line))
+tweet = Tweet_process()
+tab = []
+tweet.fill_tab_tweet_from_file('collecting_file.json')
+for x in tweet.tab_tweet_text[0].words:
+    tab.append(x)
 
-
-#main
-
-tab_tweet = []
-fill_tab_tweet_from_file(tab_tweet, "collecting_file.json")
-
+print (tab)
 
 # Partie test
 
-print(tab_tweet[0].text.words)
 
 '''
 tweet = {}
