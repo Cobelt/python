@@ -1,10 +1,15 @@
 import tweepy
+import json
+import io
 
 class Twitter_stream_listener(tweepy.StreamListener):
 
+
     def on_data(self, data):
-        collecting_file = open('collecting_file.json', 'a')
-        collecting_file.write(data)
+
+        with io.open('../collecting_file2.json', 'a') as outfile:
+            outfile.write(data)
+
         print(data)
 
     def on_error(self, status_code):
