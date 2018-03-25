@@ -2,11 +2,13 @@ import json
 from polyglot.detect import Detector
 import preprocessor
 import re
+import pandas
 
 
 
 file_in = 'collecting_file.json'
 file_out = 'preprocess_tweet_file.json'
+file_out_csv = 'preprocess_tweet_file.csv'
 
 
 #Cleaning function may leave blankspace at the start or the end because it only remove emot
@@ -192,19 +194,72 @@ def fill_tab_Tweet_process_from_json_file(tab, file_name):
 #extract data of tab of Tweet_process to write it on a file in json format
 #tab: a list of Tweet_process
 #file_name: path to a json file[OUT]
-def fill_json_file_from_tab_Tweet_process(tab, file_name):
+def fill_json_file_from_tab_Tweet_process(tab, file_name, neutral_polarity = False):
     with open(file_name, 'w') as file:
         for tweet_preprocess in tab:
-            json.dump(tweet_preprocess.create_json(), file, sort_keys=True)
-            file.write('\n')
+            if neutral_polarity == False:
+                if tweet_preprocess.polarity != 0:
+                    json.dump(tweet_preprocess.create_json(), file, sort_keys=True)
+                    file.write('\n')
+            else:
+                json.dump(tweet_preprocess.create_json(), file, sort_keys=True)
+                file.write('\n')
+
+
+
+#upgrade possible: take a json file (dict methode)
+#with row name parameter (can chose what to write in csv)
+#and the test on polarity != 0 can be done in json
+
+#write clean_text and polarity of a table of Tweet_process in a csv file
+#tab : a list of Tweet_process
+#file_name: path to a csv file [OUT]
+#json_key:
+def fill_csv_file_from_Tweet_process(tab, file_out, neutral_polarity = False):
+    df_result = pandas.DataFrame()
+    for tweet_preprocess in tab:
+        if neutral_polarity == False:
+            if tweet_preprocess.polarity != 0:
+                data = [[tweet_preprocess.clean_text, tweet_preprocess.polarity]]
+                df_local = pandas.DataFrame(data=data,columns=['clean_text', 'polarity'])
+                df_result = df_result.append(df_local, ignore_index=True)
+        else:
+            data = [[tweet_preprocess.clean_text, tweet_preprocess.polarity]]
+            df_local = pandas.DataFrame(data=data, columns=['clean_text', 'polarity'])
+            df_result = df_result.append(df_local, ignore_index=True)
+    df_result.to_csv(file_out)
+
+
+#convert dataFrame from a csv file to a numpy array
+#csv_file_in: path to a csv file [IN]
+#row/column = single label, array label, slice label, boolean array
+#   by default: function use all row and column clean_text,polarity
+#return: a numpy Array
+def csv_file_to_numpy_array(csv_file_in, row=slice(0,None, None), column=["clean_text", "polarity"]):
+    df = pandas.read_csv(file_out_csv)
+    sub_df = df.loc[row,column]
+    return sub_df.values
+
+
 #main
 
 tab_tweet = []
 fill_tab_Tweet_process_from_json_file(tab_tweet, file_in)
-fill_json_file_from_tab_Tweet_process(tab_tweet, file_out)
+fill_json_file_from_tab_Tweet_process(tab_tweet, file_out, True)
+fill_csv_file_from_Tweet_process(tab_tweet, file_out_csv, True)
+numpy_array = csv_file_to_numpy_array(file_out_csv)
 
 # Partie test
+# print ("debut partie test")
 
+# ligne = slice(0,None,None)
+# df = pandas.read_csv(file_out_csv)
+# df2 = df.set_index("clean_text", drop = False)
+# sub_df = df.loc[ligne , ["clean_text", "polarity"]]
+# print (sub_df.values)
+# numpyArr = csv_file_to_numpy_array(file_out_csv)
+# print (numpy_array)
+# print ("fin partie test")
 
 # for i in range (10):
 #     print ("tweet numero ", i)
@@ -215,19 +270,3 @@ fill_json_file_from_tab_Tweet_process(tab_tweet, file_out)
 #     print (tab_tweet[i].clean_text)
 #     print ("emoticon list")
 #     print (tab_tweet[i].emoticons_list)
-
-#
-# phrase = "bonjour - je test aha ha ha :. Mais, Tu sais je suis peut être...; non rien! Demain il va faire beau, ça te dirait de sortir. I have the fate to rule over the world"
-# phrase = "fplsfdjgpefjgnod ghegoierg nhçerpghqer goerhgiugrbhpe"
-# token_phrase = Text(phrase)
-# detector = Detector(phrase)
-#
-# for language in Detector(phrase).languages:
-#   print(language)
-#
-# print (detector.reliable)
-# print (detector.language.name)
-#
-# print (token_phrase)
-# print(detector.language)
-# print (token_phrase.words)
