@@ -2,3 +2,4 @@ venv/
 .idea/
 */__pycache__
 collecting_file.json
+clf_params.json
