@@ -23,15 +23,15 @@ def create_clf():
     nb_features = params
     del params["nb_features"]
 
-    print(params)
+    print('clf_params =', params)
 
-    clf = RandomForestClassifier(params)
+    clf = RandomForestClassifier()
     return clf
 
 
 def calculate_accuracy(predicts, test_tab):
     errors = [pred for pred, test in zip(predicts, test_tab) if pred != test]
-    print('Nombre d\'erreurs :', len(errors), '\n')
+    print('\nErrors quantity :', len(errors), '\n')
 
     percentError = 100 * (len(errors) / len(test_tab))
     accuracy = 100 - percentError
@@ -61,8 +61,8 @@ def train_and_test(data):
     train_tab = data[data['is_train']==True]
     test_tab = data[data['is_train']==False]
 
-    print('qty of data from train:', len(train_tab))
-    print('qty of data for test:', len(test_tab))
+    print('Quantity of data from train:', len(train_tab))
+    print('Quantity of data for test:', len(test_tab))
 
     features = data.columns[:4]
     known = pd.factorize(train_tab['species'])[0]
@@ -99,7 +99,6 @@ data = pd.DataFrame(iris.data, columns=iris.feature_names)
 # iris.target = 0, 1 ou 2 / iris.target_names contient les correspondances
 # Nous ce serait des 0 ou 1 et ["positif", "negatif"]
 data['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
-print(iris.target_names)
 
 train_and_test(data)
 
