@@ -50,13 +50,13 @@ class Tweet_preprocess:
                 detector = Detector(tweet_text, quiet=True)
                 #if reliable, we use language detect by polyglot detector
                 if not detector.reliable and not self.language: #empty string => false in boolean context
-                    process_reliable = True
+                    process_reliable = False
                     self.language = detector.language.name
                 #if reliable and language is what we define
                 elif not detector.reliable and detector.language.name == self.language:
-                    process_reliable = True
-                else:
                     process_reliable = False
+                else:
+                    process_reliable = True
             except:
                 raise
 
@@ -255,7 +255,6 @@ fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json, True)
 fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv, True)
 numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
 
-
 # Partie test
 # print ("debut partie test")
 # with open(tweet_file) as file:
@@ -267,8 +266,8 @@ numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
 # print(numpy_array)
 # print ("fin partie test")
 
-# for i in range (10):
-#     print ("tweet numero ", i)
+# for i in range (50):
+    # print ("tweet numero ", i)
     # print (tab_tweet[i].create_json())
     # print ("text complet")
     # print (tab_tweet[i].text)

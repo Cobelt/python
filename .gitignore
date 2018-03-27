@@ -2,4 +2,6 @@ venv/
 .idea/
 */__pycache__
 collecting_file.json
+preprocess_tweet_file.json
+preprocess_tweet_file.csv
 clf_params.json
