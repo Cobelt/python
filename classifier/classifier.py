@@ -11,13 +11,26 @@ np.random.seed(0)
 file_name = 'clf_params.txt'
 nb_features = 0
 
+regex = '(?P<key>[a-z_]+)=((?P<int>\d+)|(?P<bool>True|False)|(?P<none>None)|(?P<string>[a-zA-Z]+))'
+
 
 def create_clf():
     with open(file_name) as file:
         params = {}
         for line in file:
-            match = re.search('(?P<key>\w*)=(?P<value>\w*)', line)
-            params[match.group('key')] = match.group('value')
+            match = re.search(regex, line)
+
+            if match.group('int'):
+                params[match.group('key')] = int(match.group('int'))
+            elif match.group('bool'):
+                params[match.group('key')] = bool(match.group('bool'))
+            elif match.group('none'):
+                params[match.group('key')] = None
+            elif match.group('string'):
+                params[match.group('key')] = match.group('string')
+
+
+
 
     global nb_features
     nb_features = params
@@ -25,7 +38,7 @@ def create_clf():
 
     print('clf_params =', params)
 
-    clf = RandomForestClassifier()
+    clf = RandomForestClassifier(**params)
     return clf
 
 

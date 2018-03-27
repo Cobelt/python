@@ -33,7 +33,7 @@ def search(X, y):
 
     clf = RandomForestClassifier(n_estimators=20)
 
-    param_grid = {"max_depth": [3, None],
+    param_grid = {"max_depth": [3, 4, None],
                   "max_features": [1, 3, 4],
                   "min_samples_split": [2, 3, 4],
                   "min_samples_leaf": [1, 3, 4],
