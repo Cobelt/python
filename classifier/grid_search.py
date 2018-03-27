@@ -2,6 +2,8 @@ import numpy as np
 
 from time import time
 import io
+import json
+import pandas as pd
 
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
@@ -17,12 +19,14 @@ def report(results, n_top=3):
             print("Mean validation score: {0:.3f} (std: {1:.3f})".format(
                   results['mean_test_score'][candidate],
                   results['std_test_score'][candidate]))
-            print("Parameters: {0}".format(results['params'][candidate]))
-            print("")
+            print("Parameters:", results['params'][candidate])
 
         if i == 1:
-            with io.open('clf_params.json', 'a') as outfile:
-                outfile.write("Parameters = {0}".format(results['params'][candidate]))
+            with io.open('clf_params.txt', 'a') as outfile:
+
+                params = results['params'][candidate]
+                for param in params:
+                    outfile.write("{0}={1}\n".format(param, params[param]))
 
 
 def search(X, y):
@@ -45,8 +49,15 @@ def search(X, y):
     report(grid_search.cv_results_)
 
 
+# Partie test
+
 iris = load_iris()
 X, y = iris.data, iris.target
+
+nb_features = len(pd.DataFrame(X).columns)
+with io.open('clf_params.txt', 'w') as outfile:
+    outfile.write('nb_features={0}\n'.format(nb_features))
+
 search(X, y)
 
 
