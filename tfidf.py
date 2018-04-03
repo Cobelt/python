@@ -1,4 +1,4 @@
-from text_preprocessing import fill_tab_Tweet_process_from_json_file
+from preprocessing.text_preprocessing import fill_tab_Tweet_process_from_json_file
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 dataset = []

@@ -5,8 +5,7 @@ import re
 import pandas
 
 
-
-tweet_file = 'collecting_file.json'
+tweet_file = '..k/collecting_file.json'
 preprocess_tweet_json = 'preprocess_tweet_file.json'
 preprocess_tweet_csv = 'preprocess_tweet_file.csv'
 

@@ -1,6 +1,8 @@
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 
+# import ./dataset
+
 import pandas as pd
 import numpy as np
 
@@ -28,9 +30,6 @@ def create_clf():
                 params[match.group('key')] = None
             elif match.group('string'):
                 params[match.group('key')] = match.group('string')
-
-
-
 
     global nb_features
     nb_features = params
