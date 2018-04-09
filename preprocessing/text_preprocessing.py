@@ -5,7 +5,7 @@ import re
 import pandas
 
 
-tweet_file = '..k/collecting_file.json'
+tweet_file = '../collecting_file.json'
 preprocess_tweet_json = 'preprocess_tweet_file.json'
 preprocess_tweet_csv = 'preprocess_tweet_file.csv'
 
@@ -186,6 +186,7 @@ def fill_tab_Tweet_preprocess_from_json_file(tab, file_name):
             x = Tweet_preprocess()
             if x.constructor_json(line): #construct and test in same time
                 tab.append(x)
+
 
 def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = False):
     """
