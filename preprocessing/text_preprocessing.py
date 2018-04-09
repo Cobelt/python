@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import json
 from polyglot.detect import Detector
 import preprocessor
@@ -13,7 +15,6 @@ preprocess_tweet_csv = 'preprocess_tweet_file.csv'
 #Cleaning function may leave blankspace at the start or the end because it only remove emot
 # ex : ":) hello :)" => " hello "
 class Tweet_preprocess:
-
 
     #à mettre des condition avec isinstance pour gerer cas chaine de tweet ou json etc
     def __init__(self, language = ''):
