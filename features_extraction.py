@@ -11,6 +11,9 @@ import numpy
 from scipy.sparse import hstack
 
 
+dataset = pandas.read_csv("../preprocessing/preprocess_tweet_file.csv")
+
+
 def polarity_average_vectorizer(dataset):
     vector = numpy.zeros([len(dataset), 1])
     index = 0
@@ -28,6 +31,7 @@ def polarity_average_vectorizer(dataset):
         print(vector[index][0])
         index +=1
     return vector
+
 
 def polarity_sum_vectorizer(dataset):
     vector = numpy.zeros([len(dataset), 1])
@@ -47,36 +51,44 @@ def polarity_sum_vectorizer(dataset):
     return vector
 
 
+def get_data():
+    return dataset.loc[0:,"clean_text"]
 
 
-
-dataset = pandas.read_csv("preprocess_tweet_file.csv")
-
-X = dataset.loc[0:,"clean_text"]
-Y = dataset["polarity"]
+def get_target():
+    # return nothing if not known ?
+    return dataset['polarity']
 
 
-vectorizer = TfidfVectorizer(encoding='utf-8',
-                             decode_error='strict',
-                             strip_accents=None,
-                             analyzer='char',
-                             stop_words='english',
-                             ngram_range=(2,4),
-                             lowercase=True,
-                             max_features=None,
-                             binary=False,
-                             norm=None,
-                             use_idf=True,
-                             smooth_idf=False,
-                             min_df=0.1,
-                             max_df=0.8,
-                             sublinear_tf=True)
+def load_tweets():
+
+    tweets_obj = {}
+
+    X = get_data()
+    tweets_obj['target'] = get_target()
+
+    vectorizer = TfidfVectorizer(encoding='utf-8',
+                                 decode_error='strict',
+                                 strip_accents=None,
+                                 analyzer='char',
+                                 stop_words='english',
+                                 ngram_range=(2,4),
+                                 lowercase=True,
+                                 max_features=None,
+                                 binary=False,
+                                 norm=None,
+                                 use_idf=True,
+                                 smooth_idf=False,
+                                 min_df=0.1,
+                                 max_df=0.8,
+                                 sublinear_tf=True)
+
+    tweets_obj['data'] = vectorizer.fit_transform(X.values.astype(str))
+    tweets_obj['data'] = tweets_obj['data'].toarray()
+    return tweets_obj
 
 
-X_transform = vectorizer.fit_transform(X.values.astype(str))
-
-
-X_transform_test = numpy.empty(shape=[len(X), 1])
+#X_transform_test = numpy.empty(shape=[len(X), 1])
 
 # print(X_transform)
 # print(X_transform_test)
