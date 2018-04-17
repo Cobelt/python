@@ -5,7 +5,7 @@ import re
 import pandas
 
 
-tweet_file = '..k/collecting_file.json'
+tweet_file = '../collecting_file.json'
 preprocess_tweet_json = 'preprocess_tweet_file.json'
 preprocess_tweet_csv = 'preprocess_tweet_file.csv'
 
@@ -66,7 +66,11 @@ class Tweet_preprocess:
 
             #cleaning
             self.clean_store_emoticon(tweet_text) #normally clean_text empty, this one fill it
+            self.clean_text = self.clean_reTweet(self.text) #clean retweet
             self.clean_text = preprocessor.clean(self.clean_text)
+
+            #check correct text
+            self.clean_text = self.ascii_only(self.clean_text)
 
             self.polarity = self.polarity_emoticon(self.emoticons_list)
 
@@ -88,7 +92,7 @@ class Tweet_preprocess:
                             ([\U0001F300-\U0001F64F])| #emoticons + Uncategorized
                             ([\U00002122-\U00003299])| #Enclosed Characters + Uncategorized
                             ([\U0001F680-\U0001F6C0])| #dingbats
-                            ([\U000004C2-\U0001F251]) #transport and map symboles
+                            ([\U000004C2-\U0001F251])  #transport and map symboles
                             """
 
         emoticon_re = re.compile(emoticons_unicode, re.VERBOSE | re.UNICODE)
@@ -101,6 +105,32 @@ class Tweet_preprocess:
             match_obj = emoticon_re.search(line)
 
         self.clean_text = line
+
+    def clean_reTweet(self, text):
+        """
+                **remove RT champ for reTweet**
+                :param text: string
+                :return: string
+        """
+        regex = r"""^(RT\ @.*?:\ )"""
+        RT_re = re.compile(regex, re.VERBOSE)
+
+        res_text = text
+        match_obj = RT_re.search(res_text)
+        if (match_obj is not None):
+            res_text = res_text[:match_obj.start()] + res_text[match_obj.end():]
+
+        return res_text
+
+    def ascii_only(self, text):
+        """
+            **keep only text that can be encode in utf-8**
+            :param text: string
+            :return: string
+        """
+        res_text = text.encode("ascii", errors="ignore")
+        res_text = res_text.decode("ascii", errors="ignore")
+        return res_text
 
     def polarity_emoticon(self, emoticon_list):
         """
@@ -153,7 +183,6 @@ class Tweet_preprocess:
         self.words_list = text_token.split()
 
 
-
     def create_json(self):
         """
         **Create a json of Tweet_preprocess class
@@ -195,15 +224,24 @@ def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = 
     :param neutral_polarity: boolean : True keep neutral tweet else dont
     :return: None
     """
+    print ("creating json file")
+    tweet_ok = 0
+    process_number = 0
     with open(file_name, 'w') as file:
         for tweet_preprocess in tab:
+            print("processing - tweet number " + str(process_number))
             if neutral_polarity == False:
                 if tweet_preprocess.polarity != 0:
                     json.dump(tweet_preprocess.create_json(), file, sort_keys=True)
                     file.write('\n')
+                    tweet_ok += 1
             else:
                 json.dump(tweet_preprocess.create_json(), file, sort_keys=True)
                 file.write('\n')
+                tweet_ok += 1
+            process_number += 1
+    print(str(tweet_ok) + "/" + str(process_number) + " tweet ok")
+
 
 
 
@@ -218,18 +256,28 @@ def fill_csv_file_from_Tweet_preprocess(tab, file_out, neutral_polarity = False)
     :param neutral_polarity: boolean : True keep neutral tweet else dont
     :return: None
     """
+
+    print ("creating csv file")
+    tweet_ok = 0
+    process_number = 0
     df_result = pandas.DataFrame()
     for tweet_preprocess in tab:
+        print ("processing - tweet number " + str(process_number))
         if neutral_polarity == False:
             if tweet_preprocess.polarity != 0:
                 data = [[tweet_preprocess.clean_text, tweet_preprocess.polarity]]
                 df_local = pandas.DataFrame(data=data,columns=['clean_text', 'polarity'])
                 df_result = df_result.append(df_local, ignore_index=True)
+                tweet_ok += 1
         else:
             data = [[tweet_preprocess.clean_text, tweet_preprocess.polarity]]
             df_local = pandas.DataFrame(data=data, columns=['clean_text', 'polarity'])
             df_result = df_result.append(df_local, ignore_index=True)
-    df_result.to_csv(file_out)
+            tweet_ok += 1
+        process_number += 1
+    print(str(tweet_ok) + "/" + str(process_number) + " tweet ok")
+    df_result.to_csv(file_out, index = False)
+
 
 
 def csv_file_to_numpy_array(csv_file_in, row=slice(0,None, None), column=["clean_text", "polarity"]):
@@ -250,11 +298,34 @@ def csv_file_to_numpy_array(csv_file_in, row=slice(0,None, None), column=["clean
 
 tab_tweet = []
 fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
-fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json, True)
-fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv, True)
+fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json)
+fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv)
 numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
 
 # Partie test
+
+print ("bonjour")
+# text = u"RT @daylesfordfarm: Last chance to enter our #EasteratDaylesford giveaway. " \
+#        "Our final prize is a delicious clutch of creamy raw chocolate eg\u2026 \u003ca " \
+#        "href=\"https:\/\/twitaculous.com\/\" rel=\"nofollow\"\u003eTwitaculous - Win Stuff!\u003c\/a\u003e"
+# print (text)
+# res = re.sub(r'[^\x00-\x7F]+',' ', text)
+# print ("after cleaning")
+# # print (res)
+#
+# s = u'Good bye in Swedish is Hej d\xe5'
+# s = text.encode('ascii', errors='ignore')
+# print (s)
+
+
+print (numpy_array)
+# text = "\u201c FUCK HIM THEN I GOT A BABY \u201c no one understands how much i fucking love \ud83e\udd30"
+# text = text.encode('utf-8', errors='ignore')
+# text = text.decode('utf-8')
+# print (text)
+# text = text.decode('utf-16')
+# print (text)
+
 # print ("debut partie test")
 # with open(tweet_file) as file:
 #     for line in file:
