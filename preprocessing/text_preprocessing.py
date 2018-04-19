@@ -37,8 +37,12 @@ class Tweet_preprocess:
         # return value(false) different of what function normaly do is a bad habit
         # raise error may not be worth to use
         # if 'text' att dont existe we won't do a empty tweet (we can)
+        tweet_text = ''
         if 'text' in tweet_data:
-            tweet_text = tweet_data['text']
+            # tweet_text = tweet_data['text']
+
+            #polyglot dont fully use utf-8 so we keep only caracter that work
+            tweet_text = ''.join(x for x in tweet_data['text'] if x.isprintable())
             tweet_text_exist = True
         else:
             tweet_text_exist = False
@@ -307,9 +311,9 @@ numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
 # Partie test
 
 print ("bonjour")
-# text = u"RT @daylesfordfarm: Last chance to enter our #EasteratDaylesford giveaway. " \
-#        "Our final prize is a delicious clutch of creamy raw chocolate eg\u2026 \u003ca " \
-#        "href=\"https:\/\/twitaculous.com\/\" rel=\"nofollow\"\u003eTwitaculous - Win Stuff!\u003c\/a\u003e"
+text = u"RT @daylesfordfarm: Last chance to enter our #EasteratDaylesford giveaway. " \
+       "Our final prize is a delicious clutch of creamy raw chocolate eg\u2026 \u003ca " \
+       "href=\"https:\/\/twitaculous.com\/\" rel=\"nofollow\"\u003eTwitaculous - Win Stuff!\u003c\/a\u003e"
 # print (text)
 # res = re.sub(r'[^\x00-\x7F]+',' ', text)
 # print ("after cleaning")
@@ -319,8 +323,16 @@ print ("bonjour")
 # s = text.encode('ascii', errors='ignore')
 # print (s)
 
+# printable_str = ''
+# printable_str = ''.join(x for x in text if x.isprintable())
+# for x in text:
+#     if x.isprintable():
+#         printable_str = ''.join()
 
-print (numpy_array)
+print (printable_str)
+
+
+# print (numpy_array)
 # text = "\u201c FUCK HIM THEN I GOT A BABY \u201c no one understands how much i fucking love \ud83e\udd30"
 # text = text.encode('utf-8', errors='ignore')
 # text = text.decode('utf-8')
