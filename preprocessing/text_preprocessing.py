@@ -7,7 +7,7 @@ import re
 import pandas
 
 
-tweet_file = '../collecting_file.json'
+tweet_file = '../collecting_file_test.json'
 preprocess_tweet_json = 'preprocess_tweet_file.json'
 preprocess_tweet_csv = 'preprocess_tweet_file.csv'
 
@@ -282,7 +282,9 @@ def fill_csv_file_from_Tweet_preprocess(tab, file_out, neutral_polarity = False)
             tweet_ok += 1
         process_number += 1
     print(str(tweet_ok) + "/" + str(process_number) + " tweet ok")
-    df_result.to_csv(file_out, mode='a',index=False, header=False)
+    df_result = df_result.drop_duplicates()
+    print (str(df_result.shape[0]) + "/" + str(tweet_ok) + " tweet unique")
+    df_result.to_csv(file_out, mode='a', index=False, header=False)
 
 
 
@@ -307,9 +309,9 @@ def csv_file_to_numpy_array(csv_file_in, row=slice(0,None, None), column=["clean
 
 tab_tweet = []
 fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
-fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json)
+# fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json)
 fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv)
-numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
+# numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
 
 # Partie test
 
