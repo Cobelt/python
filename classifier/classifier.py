@@ -18,7 +18,7 @@ nb_features = 0
 
 def get_clf():
     clf = pkl.load(open("trained_clf.pkl", "rb"))
-    print(clf)
+    # print(clf)
     return clf
 
 
@@ -47,44 +47,63 @@ def get_clf():
 #     return clf
 
 
-def calculate_accuracy(predicts, test_tab):
-    errors = [pred for pred, test in zip(predicts, test_tab) if pred != test]
+def calculate_accuracy(_predicts, _targets):
+    cpt_pos_pred, cpt_neg_pred, cpt_pos_targ, cpt_neg_targ = 0, 0, 0, 0
+    for pred in _predicts:
+        if pred == 1:
+            cpt_pos_pred += 1
+        else:
+            cpt_neg_pred += 1
+
+    for targ in _targets:
+        if targ == 1:
+            cpt_pos_targ += 1
+        else:
+            cpt_neg_targ += 1
+
+    print('Positive : Target =', cpt_pos_targ,
+          '; Predicted =', cpt_pos_pred)
+
+    print('Negative : Target =', cpt_neg_targ,
+          '; Predicted =', cpt_neg_pred)
+
+    errors = [pred for pred, test in zip(_predicts, _targets) if pred != test]
     print('\nErrors quantity :', len(errors), '\n')
 
-    percentError = 100 * (len(errors) / len(test_tab))
-    accuracy = 100 - percentError
+    percent_error = 100 * (len(errors) / len(_targets))
+    accuracy = 100 - percent_error
 
     print('Accuracy:', round(accuracy, 2), '%.\n')
 
 
-def features_importance(features):
-    sortedFeat = list(zip(clf.feature_importances_, features))
-    sortedFeat.sort(reverse=True)
+def features_importance(_features):
+    sorted_feat = list(zip(clf.feature_importances_, _features))
+    sorted_feat.sort(reverse=True)
 
     print('Sorted features by importance :')
-    for item in sortedFeat:
+    for item in sorted_feat:
         print(item[1], '=>', round(item[0]*100, 2), '%')
 
 
-def rand_train_attribution(data):
+def rand_train_attribution(_data):
     # 0 or 1 at each row with 75% maximum of "1"
     train_tab, test_tab = [], []
-    is_train_array = np.random.randint(2, size=data.shape[0])
+    is_train_array = np.random.randint(2, size=_data.shape[0])
     print(is_train_array)
-    for i in len(data):
+    for i in len(_data):
         if is_train_array[i] == 0:
-            np.append(test_tab, data[i], axis=0)
+            np.append(test_tab, _data[i], axis=0)
         else:
-            np.append(train_tab, data[i], axis=0)
+            np.append(train_tab, _data[i], axis=0)
 
     return train_tab, test_tab
 
 
-def static_train_attribution(data):
-    third_quartile = int(data.shape[0] * 3/4)
+def static_train_attribution(_data):
+    third_quartile = int(_data.shape[0] * 3/4)
 
-    train_tab = data[:third_quartile]
-    test_tab = data[third_quartile:]
+    train_tab = _data[:third_quartile]
+    test_tab = _data[third_quartile:]
 
     return train_tab, test_tab, third_quartile
 
@@ -105,26 +124,41 @@ def train_and_test(_data, _target, _target_names):
     pkl.dump(clf, open("trained_clf.pkl", "wb"), protocol=pkl.HIGHEST_PROTOCOL)
     # <-
 
-    test(test_tab)
+    test(test_tab, target[third_quartile:])
 
     features_importance(train_tab)
 
 
-def test(test_tab):
+def test(_test_tab, _targets):
 
     # predicts = _target_names[clf.predict(test_tab)]
-    predicts = clf.predict(test_tab)
+    predicts = clf.predict(_test_tab)
 
-    # tableau a deux entrées pour afficher les erreurs
-    # print(pd.crosstab(test_tab['species'], predicts, rownames=['Actual Species'], colnames=['Predicted Species']).head())
+    calculate_accuracy(predicts, _targets)
+    validate_test(_test_tab, _targets, predicts)
 
-    calculate_accuracy(predicts, test_tab)
+
+def validate_test(_test_tab, _targets, predicts):
+
+    test_targets = _targets[:]
+    to_fit_test_tab = _test_tab
+    to_fit_targets = _targets
+    for i in range(len(predicts)):
+        if predicts[i] != _targets[i]:
+            np.delete(to_fit_test_tab, i, 0)
+            np.delete(to_fit_targets, i, 0)
+
+    clf.fit(to_fit_test_tab, to_fit_targets)
+
+    pkl.dump(clf, open("trained_clf.pkl", "wb"), protocol=pkl.HIGHEST_PROTOCOL)
 
 
 def predict(data):
-    features = data.columns[:4]
-    # predicts = iris.target_names[clf.predict(data[features])]
-    # print(predicts)
+
+    predicts = clf.predict(data)
+    return predicts
+
+
 
 
 # Partie test
@@ -146,7 +180,8 @@ data = tweets['data']
 target = np.array(tweets['target'])
 # target = np.vstack(tweets['target'])
 
-len_array = data.shape[1]
 # np.append(data, target, axis=1)
 
-train_and_test(data, target, ["negative", "neutral", "positive"])
+# train_and_test(data, target, ["negative", "neutral", "positive"])
+
+test(data, target)

@@ -4,7 +4,7 @@ import io
 
 class Twitter_stream_listener(tweepy.StreamListener):
 
-    def on_status(self, data):
+    def on_data(self, data):
         with io.open('../collecting_file.json', 'a') as outfile:
             outfile.write(data)
             outfile.close()

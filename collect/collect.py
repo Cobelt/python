@@ -1,5 +1,5 @@
 import tweepy
-import stream_listener
+from stream_listener import Twitter_stream_listener
 import random
 
 # variables
@@ -34,7 +34,7 @@ for i in range(0, locations_number):
     for trend in trends:
         trends_name.append(trend['name'])
 # creation of the tweepy stream
-stream_listener = stream_listener.Twitter_stream_listener()
+stream_listener = Twitter_stream_listener()
 
 stream = tweepy.Stream(auth, stream_listener)
 
