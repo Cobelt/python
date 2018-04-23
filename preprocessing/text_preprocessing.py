@@ -7,7 +7,7 @@ import re
 import pandas
 
 
-tweet_file = '../collecting_file.json'
+tweet_file = '../collecting_file_test.json'
 preprocess_tweet_json = 'preprocess_tweet_file.json'
 preprocess_tweet_csv = 'preprocess_tweet_file.csv'
 
@@ -37,8 +37,12 @@ class Tweet_preprocess:
         # return value(false) different of what function normaly do is a bad habit
         # raise error may not be worth to use
         # if 'text' att dont existe we won't do a empty tweet (we can)
+        tweet_text = ''
         if 'text' in tweet_data:
-            tweet_text = tweet_data['text']
+            # tweet_text = tweet_data['text']
+
+            #polyglot dont fully use utf-8 so we keep only caracter that work
+            tweet_text = ''.join(x for x in tweet_data['text'] if x.isprintable())
             tweet_text_exist = True
         else:
             tweet_text_exist = False
@@ -229,7 +233,7 @@ def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = 
     print ("creating json file")
     tweet_ok = 0
     process_number = 0
-    with open(file_name, 'w') as file:
+    with open(file_name, 'a') as file:
         for tweet_preprocess in tab:
             print("processing - tweet number " + str(process_number))
             if neutral_polarity == False:
@@ -278,7 +282,9 @@ def fill_csv_file_from_Tweet_preprocess(tab, file_out, neutral_polarity = False)
             tweet_ok += 1
         process_number += 1
     print(str(tweet_ok) + "/" + str(process_number) + " tweet ok")
-    df_result.to_csv(file_out, index = False)
+    df_result = df_result.drop_duplicates()
+    print (str(df_result.shape[0]) + "/" + str(tweet_ok) + " tweet unique")
+    df_result.to_csv(file_out, mode='a', index=False, header=False)
 
 
 
@@ -295,18 +301,21 @@ def csv_file_to_numpy_array(csv_file_in, row=slice(0,None, None), column=["clean
     sub_df = df.loc[row,column]
     return sub_df.values
 
+# def hello():
+#     print ("wind")
+#     return "hello"
 
 #main
 
 tab_tweet = []
 fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
-fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json)
+# fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json)
 fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv)
-numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
+# numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
 
 # Partie test
 
-print ("bonjour")
+# print ("bonjour")
 # text = u"RT @daylesfordfarm: Last chance to enter our #EasteratDaylesford giveaway. " \
 #        "Our final prize is a delicious clutch of creamy raw chocolate eg\u2026 \u003ca " \
 #        "href=\"https:\/\/twitaculous.com\/\" rel=\"nofollow\"\u003eTwitaculous - Win Stuff!\u003c\/a\u003e"
@@ -319,8 +328,16 @@ print ("bonjour")
 # s = text.encode('ascii', errors='ignore')
 # print (s)
 
+# printable_str = ''
+# printable_str = ''.join(x for x in text if x.isprintable())
+# for x in text:
+#     if x.isprintable():
+#         printable_str = ''.join()
 
-print (numpy_array)
+# print (printable_str)
+
+
+# print (numpy_array)
 # text = "\u201c FUCK HIM THEN I GOT A BABY \u201c no one understands how much i fucking love \ud83e\udd30"
 # text = text.encode('utf-8', errors='ignore')
 # text = text.decode('utf-8')
