@@ -30,12 +30,9 @@ def find_best_classifier_and_train(X, y):
 
     clf = RandomForestClassifier()
 
-    param_grid = {"n_estimators": [200, 300],
+    param_grid = {"n_estimators": [300],
                   "max_features": [X.shape[1]],
-                  "max_depth": [9],
-                  "min_samples_split": [10, 50, 100],
-                  "min_samples_leaf": [1, 50, 100],
-                  "bootstrap": [True, False]}
+                  "max_depth": [9]}
 
     grid_search = GridSearchCV(clf, cv=9, param_grid=param_grid)
     start = time()
@@ -56,4 +53,10 @@ def find_best_classifier_and_train(X, y):
 tweets = load_tweets()
 X = tweets['data']
 y = np.array(tweets['target'])
-find_best_classifier_and_train(X, y)
+
+third_quartile = int(X.shape[0] * 3/4)
+
+train_X = X[:third_quartile]
+train_y = y[:third_quartile]
+
+find_best_classifier_and_train(train_X, train_y)
