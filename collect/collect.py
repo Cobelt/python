@@ -58,7 +58,6 @@ def collect_stream(query, languages):
     stream.filter(languages=languages, track=query, async=True)
 
 
-
 collect_stream(emoji_tab, languages)
 
 

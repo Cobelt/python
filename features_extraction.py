@@ -67,7 +67,7 @@ def load_tweets():
     X = get_data()
     tweets_obj['target'] = get_target()
 
-    vectorizer = TfidfVectorizer(encoding='utf-8',
+    tfidfvectorizer = TfidfVectorizer(encoding='utf-8',
                                  decode_error='strict',
                                  strip_accents=None,
                                  analyzer='char',
@@ -83,9 +83,16 @@ def load_tweets():
                                  max_df=0.8,
                                  sublinear_tf=True)
 
-    tweets_obj['data'] = vectorizer.fit_transform(X.values.astype(str))
-    tweets_obj['data'] = tweets_obj['data'].toarray()
+    tfidf = tfidfvectorizer.fit_transform(X.values.astype(str))
+    polarity_sum = polarity_sum_vectorizer(X)
+    polarity_average = polarity_average_vectorizer(X)
+
+    features = hstack(tfidf, polarity_sum)
+    features = hstack(features, polarity_average)
+
+    tweets_obj['data'] = features.toarray()
     return tweets_obj
+
 
 
 #X_transform_test = numpy.empty(shape=[len(X), 1])

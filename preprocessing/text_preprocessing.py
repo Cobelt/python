@@ -7,20 +7,22 @@ import re
 import pandas
 
 
-tweet_file = '../collecting_file_test.json'
+tweet_file = '../collecting_file.json'
 preprocess_tweet_json = 'preprocess_tweet_file.json'
 preprocess_tweet_csv = 'preprocess_tweet_file.csv'
+preprocess_tweet_csv_positive = 'preprocess_tweet_file_positive.csv'
+preprocess_tweet_csv_negative = 'preprocess_tweet_file_negative.csv'
+
 
 
 #Cleaning function may leave blankspace at the start or the end because it only remove emot
 # ex : ":) hello :)" => " hello "
 class Tweet_preprocess:
 
-    #à mettre des condition avec isinstance pour gerer cas chaine de tweet ou json etc
     def __init__(self, language = ''):
         self.language = language
         self.text = ''
-        self.clean_text = ''
+        self.clean_text = '' #no more URL, Hashtags, Mentions, Reserved words, Emojis, Smileys
         self.emoticons_list = []
         self.polarity = 0 # 1 : positive, 0: neutral, -1 : negative
         self.words_list = []
@@ -180,7 +182,7 @@ class Tweet_preprocess:
 
     def tokenize_text(self, text):
         """
-        tokenize text in to words then store in clean_text
+        **tokenize text in to words then store in clean_text**
         :param text: string
         :return: None
         """
@@ -215,6 +217,8 @@ def fill_tab_Tweet_preprocess_from_json_file(tab, file_name):
     :param file_name: path to a json file[IN]
     :return: None
     """
+
+    print("======== Process cleanning ========== ")
     with open (file_name) as file:
         for line in file:
             x = Tweet_preprocess()
@@ -222,20 +226,22 @@ def fill_tab_Tweet_preprocess_from_json_file(tab, file_name):
                 tab.append(x)
 
 
-def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = False):
+#json file dont sort by unique text (many retweet are keep)
+def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = False, mode='a'):
     """
     **extract data of tab of Tweet_preprocess to write it on a file in json format**
     :param tab: a list of Tweet_preprocess
     :param file_name: path to a json file[OUT]
     :param neutral_polarity: boolean : True keep neutral tweet else dont
+    :param mode: w for write, a for append
     :return: None
     """
-    print ("creating json file")
+    print("======== Fill json file ========== ")
     tweet_ok = 0
     process_number = 0
-    with open(file_name, 'a') as file:
+    with open(file_name, mode) as file:
         for tweet_preprocess in tab:
-            print("processing - tweet number " + str(process_number))
+            print("Processing json - tweet number " + str(process_number))
             if neutral_polarity == False:
                 if tweet_preprocess.polarity != 0:
                     json.dump(tweet_preprocess.create_json(), file, sort_keys=True)
@@ -246,7 +252,7 @@ def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = 
                 file.write('\n')
                 tweet_ok += 1
             process_number += 1
-    print(str(tweet_ok) + "/" + str(process_number) + " tweet ok")
+    print(str(tweet_ok) + "/" + str(process_number) + " tweet with polarity")
 
 
 
@@ -254,21 +260,22 @@ def fill_json_file_from_tab_Tweet_preprocess(tab, file_name, neutral_polarity = 
 #upgrade possible: take a json file (dict methode)
 #with row name parameter (can chose what to write in csv)
 #and the test on polarity != 0 can be done in json
-def fill_csv_file_from_Tweet_preprocess(tab, file_out, neutral_polarity = False):
+def fill_csv_file_from_Tweet_preprocess(tab, file_out, neutral_polarity = False, mode='a'):
     """
-    #Write clean_text and polarity of a table of Tweet_preprocess in a csv file
+    **Write clean_text and polarity of a table of Tweet_preprocess in a csv file**
+    #unique value
     :param tab: a list of Tweet_preprocess
     :param file_out: path to a csv file [OUT]
     :param neutral_polarity: boolean : True keep neutral tweet else dont
+    :param mode: w for write, a for append
     :return: None
     """
-
-    print ("creating csv file")
+    print("======== Fill csv file ========== ")
     tweet_ok = 0
     process_number = 0
     df_result = pandas.DataFrame()
     for tweet_preprocess in tab:
-        print ("processing - tweet number " + str(process_number))
+        print ("Processing csv - tweet number " + str(process_number))
         if neutral_polarity == False:
             if tweet_preprocess.polarity != 0:
                 data = [[tweet_preprocess.clean_text, tweet_preprocess.polarity]]
@@ -281,10 +288,45 @@ def fill_csv_file_from_Tweet_preprocess(tab, file_out, neutral_polarity = False)
             df_result = df_result.append(df_local, ignore_index=True)
             tweet_ok += 1
         process_number += 1
-    print(str(tweet_ok) + "/" + str(process_number) + " tweet ok")
+    print(str(tweet_ok) + "/" + str(process_number) + " tweet with polarity")
     df_result = df_result.drop_duplicates()
     print (str(df_result.shape[0]) + "/" + str(tweet_ok) + " tweet unique")
-    df_result.to_csv(file_out, mode='a', index=False, header=False)
+    df_result.to_csv(file_out, mode=mode, index=False)
+
+
+def seperate_csv_polarity (file_in, file_out_pos, file_out_neg, mode='a'):
+    """
+    **Seperate a positive polarity and negative polarity to two different file**
+    :param file_in: path to a csv file [IN]
+    :param file_out_pos: path to a csv file [OUT]
+    :param file_out_pos: path to a csv file [OUT]
+    :param mode: w for write, a for append
+    :return: None
+    """
+    print ("======== Seperate csv ========== ")
+    np = csv_file_to_numpy_array(file_in)
+    df_result_positive  = pandas.DataFrame()
+    df_result_negative = pandas.DataFrame()
+    positive_count = 0
+    negative_count = 0
+    progress = 0
+    for row in np:
+        data = [[row[0], row[1]]]
+        df_local = pandas.DataFrame(data=data, columns=['clean_text', 'polarity'])
+        if int(row[1]) == 1:
+            df_result_positive = df_result_positive.append(df_local, ignore_index=True)
+            positive_count += 1
+        else:
+            df_result_negative = df_result_negative.append(df_local, ignore_index=True)
+            negative_count += 1
+        progress += 1
+        print ("seperating progress : " + str(progress))
+
+
+    df_result_positive.to_csv(file_out_pos, mode=mode, index=False)
+    df_result_negative.to_csv(file_out_neg, mode=mode, index=False)
+    print(str(positive_count) + " positive tweet")
+    print(str(negative_count) + " negative tweet")
 
 
 
@@ -301,66 +343,51 @@ def csv_file_to_numpy_array(csv_file_in, row=slice(0,None, None), column=["clean
     sub_df = df.loc[row,column]
     return sub_df.values
 
-# def hello():
-#     print ("wind")
-#     return "hello"
 
-#main
+def clean_collect(file_in, file_out, mode='a'):
+    """
+    **clean tweet from the collect(json file) then create a csv**
+    ##no more URL, Hashtags, Mentions, Reserved words, Emojis, Smileys
+    :param file_in: path to a json file [IN]
+    :param file_out: path to a csv file [OUT]
+    :param mode: w for write, a for append
+    :return: None
+    """
 
-tab_tweet = []
-fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
-# fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json)
-fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv)
-# numpy_array = csv_file_to_numpy_array(preprocess_tweet_csv)
-
-# Partie test
-
-# print ("bonjour")
-# text = u"RT @daylesfordfarm: Last chance to enter our #EasteratDaylesford giveaway. " \
-#        "Our final prize is a delicious clutch of creamy raw chocolate eg\u2026 \u003ca " \
-#        "href=\"https:\/\/twitaculous.com\/\" rel=\"nofollow\"\u003eTwitaculous - Win Stuff!\u003c\/a\u003e"
-# print (text)
-# res = re.sub(r'[^\x00-\x7F]+',' ', text)
-# print ("after cleaning")
-# # print (res)
-#
-# s = u'Good bye in Swedish is Hej d\xe5'
-# s = text.encode('ascii', errors='ignore')
-# print (s)
-
-# printable_str = ''
-# printable_str = ''.join(x for x in text if x.isprintable())
-# for x in text:
-#     if x.isprintable():
-#         printable_str = ''.join()
-
-# print (printable_str)
+    tab_tweet = []
+    fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
+    fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json, mode=mode)
 
 
-# print (numpy_array)
-# text = "\u201c FUCK HIM THEN I GOT A BABY \u201c no one understands how much i fucking love \ud83e\udd30"
-# text = text.encode('utf-8', errors='ignore')
-# text = text.decode('utf-8')
-# print (text)
-# text = text.decode('utf-16')
-# print (text)
 
-# print ("debut partie test")
-# with open(tweet_file) as file:
-#     for line in file:
-#         print ("============================= TWEET ========================")
-#         tweet = json.loads(line)
-#         print (tweet['id'])
+if __name__ == '__main__':
+    print ("hello, we gonna do some text_preprocessing")
+    csv_bool = "no"
+    json_bool = "no"
+    seperate = "no"
+    mode="a"
+    csv_bool = input("do you want a csv file ? (yes/no) : ")
+    seperate = input("do you want to seperate polarity? you must have a csv file (yes/no) : ")
+    json_bool = input ("do you want a json file ? (yes/no) : ")
+    mode = input("are we going to add data? else we gonna create new one (yes/no) : ")
 
-# print(numpy_array)
-# print ("fin partie test")
+    if mode == "yes":
+        mode='a'
+    else:
+        mode='w'
 
-# for i in range (50):
-    # print ("tweet numero ", i)
-    # print (tab_tweet[i].create_json())
-    # print ("text complet")
-    # print (tab_tweet[i].text)
-    # print ("text clean")
-    # print (tab_tweet[i].clean_text)
-    # print ("emoticon list")
-    # print (tab_tweet[i].emoticons_list)
+    if csv_bool == "yes" and json_bool == "yes":
+        tab_tweet = []
+        fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
+        fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json, mode=mode)
+        fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv, mode=mode)
+    elif csv_bool == "yes" and json_bool == "no":
+        clean_collect(preprocess_tweet_json, preprocess_tweet_csv, mode=mode)
+        if seperate == "yes":
+            seperate_csv_polarity(preprocess_tweet_csv, preprocess_tweet_csv_positive, preprocess_tweet_csv_negative)
+    elif csv_bool == "no" and json_bool == "yes":
+        tab_tweet = []
+        fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
+        fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json, mode=mode)
+    else:
+        print ("no operation will be done, see you")
