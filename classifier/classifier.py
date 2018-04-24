@@ -1,50 +1,21 @@
-from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
-
 from features_extraction import load_tweets
+from grid_search import find_best_classifier_and_train
 
-import pandas as pd
 import numpy as np
 
 import pickle as pkl
 
+from time import time
+
 np.random.seed(0)
 
-file_name = 'clf_params.txt'
 nb_features = 0
-
-# regex = '(?P<key>[a-z_]+)=((?P<int>\d+)|(?P<bool>True|False)|(?P<none>None)|(?P<string>[a-zA-Z]+))'
 
 
 def get_clf():
     clf = pkl.load(open("trained_clf.pkl", "rb"))
     # print(clf)
     return clf
-
-
-# def create_clf():
-#     with open(file_name) as file:
-#         params = {}
-#         for line in file:
-#             match = re.search(regex, line)
-#
-#             if match.group('int'):
-#                 params[match.group('key')] = int(match.group('int'))
-#             elif match.group('bool'):
-#                 params[match.group('key')] = bool(match.group('bool'))
-#             elif match.group('none'):
-#                 params[match.group('key')] = None
-#             elif match.group('string'):
-#                 params[match.group('key')] = match.group('string')
-#
-#     global nb_features
-#     nb_features = params
-#     del params["nb_features"]
-#
-#     print('Classifier parameters:', params)
-#
-#     clf = RandomForestClassifier(**params)
-#     return clf
 
 
 def calculate_accuracy(_predicts, _targets):
@@ -77,7 +48,8 @@ def calculate_accuracy(_predicts, _targets):
 
 
 def features_importance(_features):
-    sorted_feat = list(zip(clf.feature_importances_, _features))
+
+    sorted_feat = list(zip(clf.best_estimator_.feature_importances_, _features))
     sorted_feat.sort(reverse=True)
 
     print('Sorted features by importance :')
@@ -108,39 +80,43 @@ def static_train_attribution(_data):
     return train_tab, test_tab, third_quartile
 
 
-def train_and_test(_data, _target, _target_names):
+def train_and_test(_data, _target):
 
     # Train Part ->
-    # train_tab, test_tab = rand_train_attribution(_data)
     train_tab, test_tab, third_quartile = static_train_attribution(_data)
     train_tab_target = _target[:third_quartile]
 
-    print('Quantity of data from train:', len(train_tab))
-    print('Quantity of data for test:', len(test_tab))
+    train(train_tab, train_tab_target)
+    test(test_tab, target[third_quartile:], True)
 
-    print(train_tab_target)
-    clf.fit(train_tab, train_tab_target)
+
+def train(_data, _target):
+    print('Quantity of data from train:', len(_data))
+
+    start = time()
+    clf.fit(_data, _target)
+    print("Took %.2f seconds to train on %d tweets" % (time() - start, len(_data)))
 
     pkl.dump(clf, open("trained_clf.pkl", "wb"), protocol=pkl.HIGHEST_PROTOCOL)
-    # <-
 
-    test(test_tab, target[third_quartile:])
-
-    features_importance(train_tab)
+    # features_importance(_data)
 
 
-def test(_test_tab, _targets):
+def test(_data, _target, train_corrects):
+    print('Quantity of data for test:', len(_data))
 
-    # predicts = _target_names[clf.predict(test_tab)]
-    predicts = clf.predict(_test_tab)
+    start = time()
+    predicts = clf.predict(_data)
+    print("Took %.2f seconds to predict %d tweets" % (time() - start, len(_data)))
 
-    calculate_accuracy(predicts, _targets)
-    validate_test(_test_tab, _targets, predicts)
+    calculate_accuracy(predicts, _target)
+
+    if train_corrects:
+        validate_test(_data, _target, predicts)
 
 
 def validate_test(_test_tab, _targets, predicts):
 
-    test_targets = _targets[:]
     to_fit_test_tab = _test_tab
     to_fit_targets = _targets
     for i in range(len(predicts)):
@@ -148,14 +124,12 @@ def validate_test(_test_tab, _targets, predicts):
             np.delete(to_fit_test_tab, i, 0)
             np.delete(to_fit_targets, i, 0)
 
-    clf.fit(to_fit_test_tab, to_fit_targets)
-
-    pkl.dump(clf, open("trained_clf.pkl", "wb"), protocol=pkl.HIGHEST_PROTOCOL)
+    train(to_fit_test_tab, to_fit_targets)
 
 
-def predict(data):
+def predict(_data):
 
-    predicts = clf.predict(data)
+    predicts = clf.predict(_data)
     return predicts
 
 
@@ -165,23 +139,10 @@ def predict(data):
 
 clf = get_clf()
 
-# iris = load_iris()
-# data = pd.DataFrame(iris.data, columns=iris.feature_names)
-#
-# # iris.target = 0, 1 ou 2 / iris.target_names contient les correspondances
-# # Nous ce serait des 0 ou 1 et ["positif", "negatif"]
-# data['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
-#
-# train_and_test(data)
-
-
 tweets = load_tweets()
 data = tweets['data']
 target = np.array(tweets['target'])
-# target = np.vstack(tweets['target'])
 
-# np.append(data, target, axis=1)
-
-# train_and_test(data, target, ["negative", "neutral", "positive"])
-
-test(data, target)
+find_best_classifier_and_train(data, target)
+# train_and_test(data, target)
+test(data, target, False)

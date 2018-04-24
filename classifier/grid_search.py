@@ -46,17 +46,3 @@ def find_best_classifier_and_train(X, y):
     pkl.dump(grid_search, open("trained_clf.pkl", "wb"), protocol=pkl.HIGHEST_PROTOCOL)
 
     return grid_search
-
-
-# Partie test
-
-tweets = load_tweets()
-X = tweets['data']
-y = np.array(tweets['target'])
-
-third_quartile = int(X.shape[0] * 3/4)
-
-train_X = X[:third_quartile]
-train_y = y[:third_quartile]
-
-find_best_classifier_and_train(train_X, train_y)
