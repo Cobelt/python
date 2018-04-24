@@ -3,9 +3,11 @@ venv/
 __pycache__
 */__pycache__
 collecting_file.json
-preprocess_tweet_file.json
 preprocess_tweet_file.csv
 clf_params.txt
 collecting_file_test.json
 Dockerfile
 .dockerignore
+*.pkl
+preprocessing/csv_to_use/
+preprocessing/csv_used/

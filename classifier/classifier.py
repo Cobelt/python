@@ -1,152 +1,148 @@
-from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
-
 from features_extraction import load_tweets
+from grid_search import find_best_classifier_and_train
 
-import pandas as pd
 import numpy as np
 
 import pickle as pkl
 
+from time import time
+
 np.random.seed(0)
 
-file_name = 'clf_params.txt'
 nb_features = 0
-
-# regex = '(?P<key>[a-z_]+)=((?P<int>\d+)|(?P<bool>True|False)|(?P<none>None)|(?P<string>[a-zA-Z]+))'
 
 
 def get_clf():
     clf = pkl.load(open("trained_clf.pkl", "rb"))
-    print(clf)
+    # print(clf)
     return clf
 
 
-# def create_clf():
-#     with open(file_name) as file:
-#         params = {}
-#         for line in file:
-#             match = re.search(regex, line)
-#
-#             if match.group('int'):
-#                 params[match.group('key')] = int(match.group('int'))
-#             elif match.group('bool'):
-#                 params[match.group('key')] = bool(match.group('bool'))
-#             elif match.group('none'):
-#                 params[match.group('key')] = None
-#             elif match.group('string'):
-#                 params[match.group('key')] = match.group('string')
-#
-#     global nb_features
-#     nb_features = params
-#     del params["nb_features"]
-#
-#     print('Classifier parameters:', params)
-#
-#     clf = RandomForestClassifier(**params)
-#     return clf
+def calculate_accuracy(_predicts, _targets):
+    cpt_pos_pred, cpt_neg_pred, cpt_pos_targ, cpt_neg_targ = 0, 0, 0, 0
+    for pred in _predicts:
+        if pred == 1:
+            cpt_pos_pred += 1
+        else:
+            cpt_neg_pred += 1
 
+    for targ in _targets:
+        if targ == 1:
+            cpt_pos_targ += 1
+        else:
+            cpt_neg_targ += 1
 
-def calculate_accuracy(predicts, test_tab):
-    errors = [pred for pred, test in zip(predicts, test_tab) if pred != test]
+    print('Positive : Target =', cpt_pos_targ,
+          '; Predicted =', cpt_pos_pred)
+
+    print('Negative : Target =', cpt_neg_targ,
+          '; Predicted =', cpt_neg_pred)
+
+    errors = [pred for pred, test in zip(_predicts, _targets) if pred != test]
     print('\nErrors quantity :', len(errors), '\n')
 
-    percentError = 100 * (len(errors) / len(test_tab))
-    accuracy = 100 - percentError
+    percent_error = 100 * (len(errors) / len(_targets))
+    accuracy = 100 - percent_error
 
     print('Accuracy:', round(accuracy, 2), '%.\n')
 
 
-def features_importance(features):
-    sortedFeat = list(zip(clf.feature_importances_, features))
-    sortedFeat.sort(reverse=True)
+def features_importance(_features):
+
+    sorted_feat = list(zip(clf.best_estimator_.feature_importances_, _features))
+    sorted_feat.sort(reverse=True)
 
     print('Sorted features by importance :')
-    for item in sortedFeat:
+    for item in sorted_feat:
         print(item[1], '=>', round(item[0]*100, 2), '%')
 
 
-def rand_train_attribution(data):
+def rand_train_attribution(_data):
     # 0 or 1 at each row with 75% maximum of "1"
     train_tab, test_tab = [], []
-    is_train_array = np.random.randint(2, size=data.shape[0])
+    is_train_array = np.random.randint(2, size=_data.shape[0])
     print(is_train_array)
-    for i in len(data):
+    for i in len(_data):
         if is_train_array[i] == 0:
-            np.append(test_tab, data[i], axis=0)
+            np.append(test_tab, _data[i], axis=0)
         else:
-            np.append(train_tab, data[i], axis=0)
+            np.append(train_tab, _data[i], axis=0)
 
     return train_tab, test_tab
 
 
-def static_train_attribution(data):
-    third_quartile = int(data.shape[0] * 3/4)
+def static_train_attribution(_data):
+    third_quartile = int(_data.shape[0] * 3/4)
 
-    train_tab = data[:third_quartile]
-    test_tab = data[third_quartile:]
+    train_tab = _data[:third_quartile]
+    test_tab = _data[third_quartile:]
 
     return train_tab, test_tab, third_quartile
 
 
-def train_and_test(_data, _target, _target_names):
+def train_and_test(_data, _target):
 
     # Train Part ->
-    # train_tab, test_tab = rand_train_attribution(_data)
     train_tab, test_tab, third_quartile = static_train_attribution(_data)
     train_tab_target = _target[:third_quartile]
 
-    print('Quantity of data from train:', len(train_tab))
-    print('Quantity of data for test:', len(test_tab))
+    train(train_tab, train_tab_target)
+    test(test_tab, target[third_quartile:], True)
 
-    print(train_tab_target)
-    clf.fit(train_tab, train_tab_target)
+
+def train(_data, _target):
+    print('Quantity of data from train:', len(_data))
+
+    start = time()
+    clf.fit(_data, _target)
+    print("Took %.2f seconds to train on %d tweets" % (time() - start, len(_data)))
 
     pkl.dump(clf, open("trained_clf.pkl", "wb"), protocol=pkl.HIGHEST_PROTOCOL)
-    # <-
 
-    test(test_tab)
-
-    features_importance(train_tab)
+    # features_importance(_data)
 
 
-def test(test_tab):
+def test(_data, _target, train_corrects):
+    print('Quantity of data for test:', len(_data))
 
-    # predicts = _target_names[clf.predict(test_tab)]
-    predicts = clf.predict(test_tab)
+    start = time()
+    predicts = clf.predict(_data)
+    print("Took %.2f seconds to predict %d tweets" % (time() - start, len(_data)))
 
-    # tableau a deux entrées pour afficher les erreurs
-    # print(pd.crosstab(test_tab['species'], predicts, rownames=['Actual Species'], colnames=['Predicted Species']).head())
+    calculate_accuracy(predicts, _target)
 
-    calculate_accuracy(predicts, test_tab)
+    if train_corrects:
+        validate_test(_data, _target, predicts)
 
 
-def predict(data):
-    features = data.columns[:4]
-    # predicts = iris.target_names[clf.predict(data[features])]
-    # print(predicts)
+def validate_test(_test_tab, _targets, predicts):
+
+    to_fit_test_tab = _test_tab
+    to_fit_targets = _targets
+    for i in range(len(predicts)):
+        if predicts[i] != _targets[i]:
+            np.delete(to_fit_test_tab, i, 0)
+            np.delete(to_fit_targets, i, 0)
+
+    train(to_fit_test_tab, to_fit_targets)
+
+
+def predict(_data):
+
+    predicts = clf.predict(_data)
+    return predicts
+
+
 
 
 # Partie test
 
 clf = get_clf()
 
-# iris = load_iris()
-# data = pd.DataFrame(iris.data, columns=iris.feature_names)
-#
-# # iris.target = 0, 1 ou 2 / iris.target_names contient les correspondances
-# # Nous ce serait des 0 ou 1 et ["positif", "negatif"]
-# data['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
-#
-# train_and_test(data)
-
-
 tweets = load_tweets()
 data = tweets['data']
 target = np.array(tweets['target'])
-# target = np.vstack(tweets['target'])
 
-len_array = data.shape[1]
-# np.append(data, target, axis=1)
-
-train_and_test(data, target, ["negative", "neutral", "positive"])
+find_best_classifier_and_train(data, target)
+# train_and_test(data, target)
+test(data, target, False)
