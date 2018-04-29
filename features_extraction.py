@@ -11,7 +11,7 @@ import numpy
 from scipy.sparse import hstack
 
 
-dataset = pandas.read_csv("../preprocessing/preprocess_tweet_file.csv")
+dataset = pandas.read_csv("../preprocessing/preprocess_tweet_file_equalized_2.csv")
 
 
 def polarity_average_vectorizer(dataset):
@@ -83,13 +83,7 @@ def load_tweets():
                                  max_df=0.8,
                                  sublinear_tf=True)
 
-    tfidf = tfidfvectorizer.fit_transform(X.values.astype(str))
-    polarity_sum = polarity_sum_vectorizer(X)
-    polarity_average = polarity_average_vectorizer(X)
-
-    features = hstack(tfidf, polarity_sum)
-    features = hstack(features, polarity_average)
-
+    features = tfidfvectorizer.fit_transform(X.values.astype(str))
     tweets_obj['data'] = features.toarray()
     return tweets_obj
 

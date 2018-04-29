@@ -20,17 +20,17 @@ def get_clf():
 
 def calculate_accuracy(_predicts, _targets):
     cpt_pos_pred, cpt_neg_pred, cpt_pos_targ, cpt_neg_targ = 0, 0, 0, 0
-    for pred in _predicts:
-        if pred == 1:
+    for pred, targ in zip(_predicts, _targets):
+        if pred == 1 or pred == "1":
             cpt_pos_pred += 1
-        else:
+        elif pred == -1 or pred == "-1":
             cpt_neg_pred += 1
 
-    for targ in _targets:
-        if targ == 1:
+        if targ == 1 or targ == "1":
             cpt_pos_targ += 1
-        else:
+        elif pred == -1 or targ == "-1":
             cpt_neg_targ += 1
+
 
     print('Positive : Target =', cpt_pos_targ,
           '; Predicted =', cpt_pos_pred)
@@ -130,19 +130,19 @@ def validate_test(_test_tab, _targets, predicts):
 def predict(_data):
 
     predicts = clf.predict(_data)
+
     return predicts
 
 
 
-
-# Partie test
-
-clf = get_clf()
-
 tweets = load_tweets()
 data = tweets['data']
+data = data[:,:195]
 target = np.array(tweets['target'])
 
-find_best_classifier_and_train(data, target)
-# train_and_test(data, target)
+
+# find_best_classifier_and_train(data, target)
+
+clf = get_clf()
+# train(data, target)
 test(data, target, False)
