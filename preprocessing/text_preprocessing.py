@@ -310,6 +310,18 @@ def seperate_csv_polarity (file_in, file_out_pos, file_out_neg, mode='a'):
     positive_count = 0
     negative_count = 0
     progress = 0
+    # for row in np:
+    #     data = [[row[0], row[1]]]
+    #     df_local = pandas.DataFrame(data=data, columns=['clean_text', 'polarity'])
+    #     if int(row[1]) == 1:
+    #         df_result_positive = df_result_positive.append(df_local, ignore_index=True)
+    #         positive_count += 1
+    #     else:
+    #         df_result_negative = df_result_negative.append(df_local, ignore_index=True)
+    #         negative_count += 1
+    #     progress += 1
+    #     print ("seperating progress : " + str(progress))
+
     for row in np:
         data = [[row[0], row[1]]]
         df_local = pandas.DataFrame(data=data, columns=['clean_text', 'polarity'])
@@ -320,7 +332,7 @@ def seperate_csv_polarity (file_in, file_out_pos, file_out_neg, mode='a'):
             df_result_negative = df_result_negative.append(df_local, ignore_index=True)
             negative_count += 1
         progress += 1
-        print ("seperating progress : " + str(progress))
+        print("separating progress : " + str(progress))
 
 
     df_result_positive.to_csv(file_out_pos, mode=mode, index=False)
@@ -356,8 +368,7 @@ def clean_collect(file_in, file_out, mode='a'):
 
     tab_tweet = []
     fill_tab_Tweet_preprocess_from_json_file(tab_tweet, tweet_file)
-    fill_json_file_from_tab_Tweet_preprocess(tab_tweet, preprocess_tweet_json, mode=mode)
-
+    fill_csv_file_from_Tweet_preprocess(tab_tweet, preprocess_tweet_csv, mode=mode)
 
 
 if __name__ == '__main__':

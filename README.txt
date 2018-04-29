@@ -46,7 +46,20 @@ For the commands, we are supposing that you are located at the project's root an
 	* features_extraction.py => This file is used to store different features extraction techniques. It is used by the classifier to get a training set.
 
 	
+    * preprocessing/ => this package is used to perform the task of cleanning tweet
 
+        **To clean tweets:
+            cd preprocessing
+            python text_preprocessing.py
 
+        => it will ask you different question :
+            1) do you want a csv file : it will create or use "preprocess_tweet_file.csv" then put clean tweet inside.
+            2) do you want to seperate polarity? you must have a csv file (yes/no) : it will seperate positive and negative tweet of the csv to 2 seperate csv.
+                "preprocess_tweet_file_positive.csv" and "preprocess_tweet_file_negative.csv". The answer 1 must be yes
+            3) do you want a json file ? (yes/no) : it will create or use "preprocess_tweet_file.json" then put clean tweet inside.
+            4) are we going to add data? else we gonna create new one (yes/no) : All operation will be append (add clean tweet at the end of the file if existe)
+                if anwser is no all operation will be "write" (empty file then write new data)
+
+            For more detail, check commentary of function.
 
 
